@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'active',
     ];
 
     /**
@@ -43,6 +45,29 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
+            'active' => 'boolean',
         ];
+    }
+
+    public function hasRole(UserRole ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    /** Rota inicial conforme o perfil. */
+    public function homeRoute(): string
+    {
+        return match ($this->role) {
+            UserRole::Operador => 'guarita.painel',
+            UserRole::Admin => 'admin.dashboard',
+            UserRole::Financeiro => 'admin.dashboard',
+            UserRole::Auditor => 'admin.dashboard',
+        };
     }
 }
