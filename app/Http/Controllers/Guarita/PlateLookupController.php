@@ -6,11 +6,17 @@ use App\Enums\AccessStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessRecord;
 use App\Models\Vehicle;
+use App\Services\SinespService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class PlateLookupController extends Controller
 {
+    public function __construct(private SinespService $sinesp)
+    {
+    }
+
     /** Tela de consulta de placa com histórico do veículo. */
     public function index(Request $request)
     {
@@ -32,6 +38,8 @@ class PlateLookupController extends Controller
                         'id' => $r->id,
                         'entered_at' => $r->entered_at->toIso8601String(),
                         'exited_at' => $r->exited_at?->toIso8601String(),
+                        'entry_photo_url' => $r->entry_photo ? Storage::url($r->entry_photo) : null,
+                        'exit_photo_url' => $r->exit_photo ? Storage::url($r->exit_photo) : null,
                         'entry_type' => $r->entryType->name,
                         'category' => $r->vehicleCategory->name,
                         'company' => $r->company?->name,
@@ -74,6 +82,7 @@ class PlateLookupController extends Controller
         return response()->json([
             'vehicle' => $vehicle,
             'authorization' => $vehicle?->activeAuthorization,
+            'sinesp' => $this->sinesp->consultar($plate),
             'open_record' => $openRecord ? [
                 'id' => $openRecord->id,
                 'entered_at' => $openRecord->entered_at->toIso8601String(),

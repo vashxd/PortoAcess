@@ -21,7 +21,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>PortoAccess — Fatura {{ $invoice->number }}</h1>
+        <h1>Porto da ponte — Fatura {{ $invoice->number }}</h1>
         <span class="muted">Sistema de Controle de Acesso Veicular Portuário · Manaus/AM</span>
     </div>
 
@@ -67,7 +67,7 @@
     </table>
 
     <div class="footer">
-        Documento gerado em {{ now()->format('d/m/Y H:i') }} pelo PortoAccess.
+        Documento gerado em {{ now()->format('d/m/Y H:i') }} pelo Porto da ponte.
         Este documento não substitui nota fiscal.
     </div>
 </body>

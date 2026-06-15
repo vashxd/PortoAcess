@@ -1,66 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PortoAccess — Controle de Acesso Veicular Portuário
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicação web (fase 1) conforme a [documentação do projeto](docs/documentacao-portoaccess.md): controle de entrada/saída de veículos com leitura de placas por câmera LPR, cobrança por tipo de acesso, faturamento de empresas conveniadas, dashboard e auditoria.
 
-## About Laravel
+**Stack:** Laravel 12 · Inertia.js · Vue 3 · Tailwind CSS · SQLite (dev) / PostgreSQL (produção)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Como rodar (desenvolvimento)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```powershell
+composer install
+npm install
+copy .env.example .env        # já configurado neste repositório
+php artisan key:generate      # se .env novo
+php artisan migrate --seed
+php artisan storage:link
+npm run build                 # ou: npm run dev (hot reload)
+php artisan serve
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Acesse http://127.0.0.1:8000
 
-## Learning Laravel
+> **Nota (esta máquina):** as extensões PHP (sqlite, zip, gd, intl) foram habilitadas
+> em um `php.ini` de usuário em `C:\Users\hscjr\.php`, apontado pela variável de
+> ambiente `PHPRC` (nível usuário). Em novos terminais isso já vale automaticamente;
+> se o PHP reclamar de extensão ausente, confira `$env:PHPRC`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Usuários iniciais (seed)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Administrador | `admin@portoaccess.local` | `password` |
+| Operador (guarita) | `operador@portoaccess.local` | `password` |
+| Financeiro | `financeiro@portoaccess.local` | `password` |
+| Auditor | `auditor@portoaccess.local` | `password` |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+O auto-registro está desabilitado: usuários são criados pelo Administrador em **Cadastros → Usuários**. Troque as senhas padrão antes de qualquer uso real.
 
-## Laravel Sponsors
+## Simulando a câmera LPR (sem hardware)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```powershell
+# Evento de entrada com placa aleatória
+php artisan camera:simulate entrada
 
-### Premium Partners
+# Placa específica / veículo já cadastrado
+php artisan camera:simulate entrada ABC1D23
+php artisan camera:simulate saida --known
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+# Forçar divergência cor/modelo (teste do alerta de placa clonada)
+php artisan camera:simulate entrada ABC1D23 --color=Roxo --model=Fusca
+```
 
-## Contributing
+A leitura aparece no **Painel da Guarita** em até 4 s (polling). O painel mostra foto, placa, cor/modelo, dados do cadastro e os botões de confirmação.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Ponte ALPR para câmera IP comum (Opção B — `alpr-bridge/`)
 
-## Code of Conduct
+Para câmeras sem LPR embarcado: serviço Python que captura o vídeo (RTSP/webcam),
+lê placas localmente com [fast-alpr](https://github.com/ankandrew/fast-alpr)
+(open-source, sem licença mensal) e envia ao webhook.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```powershell
+cd alpr-bridge
+.\.venv\Scripts\python.exe bridge.py --source "rtsp://admin:SENHA@192.168.1.7:554/onvif1" --camera entrada
 
-## Security Vulnerabilities
+# Testar conexão RTSP (câmeras Yoosee: senha do dispositivo no app)
+.\.venv\Scripts\python.exe test_rtsp.py SENHA_DO_APP 192.168.1.7
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Testar com webcam ou imagem
+.\.venv\Scripts\python.exe bridge.py --source 0 --camera entrada --show
+.\.venv\Scripts\python.exe bridge.py --source teste-placa.jpg --camera entrada --once
+```
 
-## License
+Parâmetros úteis: `--min-conf` (confiança mínima), `--cooldown` (segundos sem repetir
+a mesma placa), `--any-plate` (aceita formatos não brasileiros), `--show` (janela com detecções).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Webhook real (câmera Intelbras VIP 5460 LPR ou similar)
+
+Configure a câmera para enviar HTTP POST para:
+
+```
+POST /api/camera/events
+Header: X-Camera-Token: <CAMERA_WEBHOOK_TOKEN do .env>
+Body JSON: { "camera": "entrada|saida", "plate": "ABC1D23",
+             "color": "...", "model": "...", "brand": "...",
+             "confidence": 97.5, "photo_base64": "..." }
+```
+
+## Funcionalidades implementadas
+
+- **Guarita:** fila de leituras pendentes (tempo quase real), confirmação de entrada/saída, divergência cor/modelo × cadastro (alerta de placa clonada), modo contingência (digitação manual), saída sem entrada com justificativa, acionamento de cancela, pátio atual com busca e alerta de visitas vencidas, consulta de placa com histórico.
+- **Cobrança:** preço por tipo × categoria com vigência histórica, PIX (QR Code de chave estática), cartão, dinheiro, pagamento misto (validação da soma), faturado para empresa conveniada (com verificação de autorização, limite de crédito e desconto de convênio), isenções pontuais com justificativa auditada.
+- **Faturamento:** fechamento de período por empresa, fatura com extrato de acessos, PDF, registro de baixa, painel de inadimplência (vencidas).
+- **Administração:** dashboard (receita dia/semana/mês, comparativo, ticket médio, volume diário, distribuições), CRUDs de categorias, tipos de entrada, preços, empresas, veículos autorizados (funcionário/empresa) e usuários, aprovação de cancelamentos, relatórios com exportação CSV, trilha de auditoria completa.
+- **RBAC:** Operador, Administrador, Financeiro e Auditor conforme a matriz de permissões da documentação.
+
+## Configurações (.env)
+
+| Variável | Função |
+|---|---|
+| `CAMERA_WEBHOOK_TOKEN` | Token do webhook das câmeras LPR |
+| `PIX_KEY`, `PIX_MERCHANT_NAME` | Chave PIX estática exibida na cobrança |
+| `GATE_DRIVER` | `log` (dev) ou `http` (módulo relé IP) |
+| `GATE_ENTRADA_URL`, `GATE_SAIDA_URL` | URLs do relé das cancelas (driver `http`) |
+| `PHOTO_RETENTION_DAYS` | Retenção de fotos (LGPD — padrão 90 dias) |
+
+## Testes
+
+```powershell
+php artisan test
+```
+
+Inclui testes de ponta a ponta: webhook da câmera, fluxo retirada com pagamento misto, balsa com cobrança na entrada, faturamento de convênio com geração de fatura e PDF, saída sem entrada, cancelamento operador→admin, RBAC e auditoria.
+
+## Implantação (produção — servidor local na guarita)
+
+1. Trocar `DB_CONNECTION` para `pgsql` e criar o banco PostgreSQL.
+2. `APP_ENV=production`, `APP_DEBUG=false`, HTTPS atrás de proxy (Caddy/Nginx).
+3. Configurar `GATE_DRIVER=http` com as URLs dos módulos relé.
+4. Agendar backup diário do banco (RNF07) e job de limpeza de fotos > `PHOTO_RETENTION_DAYS`.
+5. Fase 2 (ver doc): PIX dinâmico, TEF, NFS-e, WebSocket (Laravel Reverb) no lugar do polling, agenda da balsa.

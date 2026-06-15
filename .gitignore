@@ -21,3 +21,17 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# PortoAccess — artefatos que NÃO devem ir ao Git
+/alpr-bridge/.venv/
+/alpr-bridge/log-*.txt
+/alpr-bridge/sinesp-out.txt
+/alpr-bridge/sinesp-err.txt
+/alpr-bridge/snapshot_*.jpg
+/alpr-bridge/teste-placa.jpg
+/cloudflared.exe
+/cloudflared-err.txt
+/cloudflared-out.txt
+# Imagens-fonte avulsas na raiz (logos finais já versionados em public/)
+/ChatGPT Image*.png
+/Logo_novo.png

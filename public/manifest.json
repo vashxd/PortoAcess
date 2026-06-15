@@ -1,0 +1,38 @@
+{
+  "name": "Porto da ponte",
+  "short_name": "Porto da ponte",
+  "description": "Sistema de controle de acesso portuário",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-maskable.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Guarita",
+      "url": "/guarita/painel",
+      "description": "Painel da guarita"
+    },
+    {
+      "name": "Pátio",
+      "url": "/guarita/patio",
+      "description": "Veículos no pátio"
+    }
+  ]
+}

@@ -6,7 +6,11 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+
+const appName = import.meta.env.VITE_APP_NAME || 'Porto da ponte';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

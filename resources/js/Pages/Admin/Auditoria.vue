@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PhotoThumb from '@/Components/PhotoThumb.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -58,6 +59,7 @@ const fmt = (obj) => (obj ? JSON.stringify(obj, null, 0).slice(0, 300) : '—');
                             <th class="px-3 py-3">Entidade</th>
                             <th class="px-3 py-3">Antes</th>
                             <th class="px-3 py-3">Depois</th>
+                            <th class="px-3 py-3">Imagens</th>
                             <th class="px-3 py-3">IP</th>
                         </tr>
                     </thead>
@@ -71,6 +73,13 @@ const fmt = (obj) => (obj ? JSON.stringify(obj, null, 0).slice(0, 300) : '—');
                             <td class="px-3 py-2">{{ log.entity }}<span v-if="log.entity_id" class="text-gray-400">#{{ log.entity_id }}</span></td>
                             <td class="max-w-xs truncate px-3 py-2 font-mono text-[10px] text-gray-500" :title="fmt(log.old_values)">{{ fmt(log.old_values) }}</td>
                             <td class="max-w-xs truncate px-3 py-2 font-mono text-[10px] text-gray-500" :title="fmt(log.new_values)">{{ fmt(log.new_values) }}</td>
+                            <td class="px-3 py-2">
+                                <div v-if="log.entry_photo_url || log.exit_photo_url" class="flex items-center gap-1.5">
+                                    <PhotoThumb :src="log.entry_photo_url" caption="Entrada" />
+                                    <PhotoThumb :src="log.exit_photo_url" caption="Saída" />
+                                </div>
+                                <span v-else class="text-gray-300">—</span>
+                            </td>
                             <td class="px-3 py-2 text-gray-400">{{ log.ip }}</td>
                         </tr>
                     </tbody>

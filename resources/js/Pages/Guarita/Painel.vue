@@ -114,6 +114,13 @@ async function lookupPlate() {
             entradaForm.color = data.vehicle.color || entradaForm.color;
             entradaForm.owner_name = data.vehicle.owner_name || entradaForm.owner_name;
         }
+        // Sinesp completa cor/marca/modelo quando não há cadastro local
+        const s = data.sinesp;
+        if (s && s.disponivel) {
+            if (!entradaForm.brand && s.marca) entradaForm.brand = s.marca;
+            if (!entradaForm.model && s.modelo) entradaForm.model = s.modelo;
+            if (!entradaForm.color && s.cor) entradaForm.color = s.cor;
+        }
         if (data.authorization?.type === 'funcionario') {
             const func = props.entryTypes.find((t) => t.name.toLowerCase().startsWith('funcion'));
             entradaForm.entry_type_id = func?.id ?? entradaForm.entry_type_id;
@@ -122,6 +129,21 @@ async function lookupPlate() {
         lookupInfo.value = null;
     }
 }
+
+const sinespUi = computed(() => {
+    const s = lookupInfo.value?.sinesp;
+    if (!s) return null;
+    const linha = [s.marca, s.modelo, s.cor, s.ano_modelo || s.ano, s.uf].filter(Boolean).join(' · ');
+    const mapa = {
+        roubo_furto: { titulo: '🚨 ALERTA: VEÍCULO COM REGISTRO DE ROUBO/FURTO', cls: 'border-red-300 bg-red-50 text-red-800', alerta: true },
+        restricao: { titulo: '⚠️ Veículo com restrição', cls: 'border-amber-300 bg-amber-50 text-amber-800', alerta: false },
+        regular: { titulo: '✓ Situação regular (Sinesp)', cls: 'border-emerald-200 bg-emerald-50 text-emerald-800', alerta: false },
+        nao_encontrado: { titulo: 'Placa não encontrada no Sinesp', cls: 'border-gray-200 bg-gray-50 text-gray-600', alerta: false },
+        indisponivel: { titulo: 'Sinesp indisponível no momento', cls: 'border-gray-200 bg-gray-50 text-gray-500', alerta: false },
+    };
+    const base = mapa[s.situacao] || mapa.indisponivel;
+    return { ...base, linha, mensagem: s.mensagem };
+});
 
 const selectedEntryType = computed(() => props.entryTypes.find((t) => t.id === entradaForm.entry_type_id));
 const selectedCompany = computed(() => props.companies.find((c) => c.id === entradaForm.company_id));
@@ -263,8 +285,8 @@ function abrirCancela(camera) {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-wrap items-center gap-3">
                     <h2 class="text-xl font-bold text-gray-800">Painel da Guarita</h2>
                     <span class="rounded-full bg-sky-100 px-3 py-1 text-sm font-bold text-sky-800">
                         {{ patioCount }} no pátio
@@ -275,13 +297,13 @@ function abrirCancela(camera) {
                 </div>
                 <div class="flex gap-2">
                     <button
-                        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+                        class="flex-1 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 active:bg-emerald-800 sm:flex-none sm:py-2"
                         @click="abrirCancela('entrada')"
                     >
                         ⬆ Cancela ENTRADA
                     </button>
                     <button
-                        class="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                        class="flex-1 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white hover:bg-orange-700 active:bg-orange-800 sm:flex-none sm:py-2"
                         @click="abrirCancela('saida')"
                     >
                         ⬇ Cancela SAÍDA
@@ -489,6 +511,13 @@ function abrirCancela(camera) {
                             </option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Situação do veículo (Sinesp) -->
+                <div v-if="sinespUi" class="rounded-lg border p-3" :class="sinespUi.cls">
+                    <p class="text-sm font-bold" :class="{ 'animate-pulse': sinespUi.alerta }">{{ sinespUi.titulo }}</p>
+                    <p v-if="sinespUi.linha" class="mt-0.5 text-xs opacity-90">{{ sinespUi.linha }}</p>
+                    <p v-if="sinespUi.mensagem" class="mt-0.5 text-xs opacity-75">{{ sinespUi.mensagem }}</p>
                 </div>
 
                 <!-- Identificação de visitante -->

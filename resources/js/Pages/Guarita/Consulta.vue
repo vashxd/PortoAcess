@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PhotoThumb from '@/Components/PhotoThumb.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -76,6 +77,7 @@ const tempo = (min) => (min == null ? '—' : `${Math.floor(min / 60)}h${String(
                             <th class="px-4 py-3">Pago</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Operador</th>
+                            <th class="px-4 py-3">Imagens</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -100,6 +102,12 @@ const tempo = (min) => (min == null ? '—' : `${Math.floor(min / 60)}h${String(
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-xs">{{ h.operator_in || h.operator_out || '—' }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <PhotoThumb :src="h.entry_photo_url" caption="Entrada" />
+                                    <PhotoThumb :src="h.exit_photo_url" caption="Saída" />
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

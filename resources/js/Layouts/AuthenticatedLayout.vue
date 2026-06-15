@@ -4,6 +4,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import InstallPrompt from '@/Components/InstallPrompt.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
@@ -44,7 +45,8 @@ watch(
                         <div class="flex">
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('dashboard')" class="flex items-center gap-2">
-                                    <span class="text-xl font-black tracking-tight text-sky-400">⚓ PortoAccess</span>
+                                    <img src="/logo.png" alt="Porto da ponte" class="h-11 w-auto object-contain" />
+                                    <span class="text-xl font-black tracking-tight text-sky-400">Porto da ponte</span>
                                 </Link>
                             </div>
 
@@ -212,10 +214,12 @@ watch(
                 </div>
             </header>
 
-            <main>
+            <main class="pb-safe">
                 <slot />
             </main>
         </div>
+
+        <InstallPrompt />
     </div>
 </template>
 
