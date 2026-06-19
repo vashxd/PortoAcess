@@ -98,8 +98,9 @@ Body JSON: { "camera": "entrada|saida", "plate": "ABC1D23",
 |---|---|
 | `CAMERA_WEBHOOK_TOKEN` | Token do webhook das câmeras LPR |
 | `PIX_KEY`, `PIX_MERCHANT_NAME` | Chave PIX estática exibida na cobrança |
-| `GATE_DRIVER` | `log` (dev) ou `http` (módulo relé IP) |
+| `GATE_DRIVER` | `log` (dev), `http` (módulo relé IP) ou `hikvision` (relé embutido da câmera via ISAPI) |
 | `GATE_ENTRADA_URL`, `GATE_SAIDA_URL` | URLs do relé das cancelas (driver `http`) |
+| `CAM_ENTRADA_*`, `CAM_SAIDA_*` | IP/login/relé das câmeras Hikvision — ver [docs/integracao-camera-hikvision.md](docs/integracao-camera-hikvision.md) |
 | `PHOTO_RETENTION_DAYS` | Retenção de fotos (LGPD — padrão 90 dias) |
 
 ## Testes
