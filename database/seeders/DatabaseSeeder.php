@@ -120,5 +120,8 @@ class DatabaseSeeder extends Seeder
             'credit_limit' => 10000.00,
             'discount_percent' => 10.00,
         ]);
+
+        // Massa de demonstração: empresas faturadas + acessos avulsos pagantes.
+        $this->call(DemoDataSeeder::class);
     }
 }
