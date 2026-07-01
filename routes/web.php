@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\AuthorizedVehicleController;
 use App\Http\Controllers\Admin\CancellationController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -10,7 +11,9 @@ use App\Http\Controllers\Admin\PriceController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleCategoryController;
-use App\Http\Controllers\Admin\AuthorizedVehicleController;
+use App\Http\Controllers\Admin\VesselController;
+use App\Http\Controllers\Admin\VesselDepartureController;
+use App\Http\Controllers\Admin\VesselScheduleController;
 use App\Http\Controllers\Guarita\AccessController;
 use App\Http\Controllers\Guarita\GateController;
 use App\Http\Controllers\Guarita\GuaritaController;
@@ -78,6 +81,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/relatorios/export', [ReportController::class, 'export'])->name('relatorios.export');
     });
 
+    // Quadro de viagens das balsas — visível a todos os perfis; gestão é só admin
+    Route::middleware('role:operador,admin,financeiro,auditor')->group(function () {
+        Route::get('/viagens', [VesselDepartureController::class, 'index'])->name('viagens.index');
+    });
+
     // Cadastros: somente admin
     Route::middleware('role:admin')->group(function () {
         Route::resource('categorias', VehicleCategoryController::class)
@@ -90,6 +98,17 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             ->only(['index', 'store', 'update', 'destroy'])->parameters(['autorizados' => 'authorizedVehicle']);
         Route::resource('usuarios', UserController::class)
             ->only(['index', 'store', 'update'])->parameters(['usuarios' => 'user']);
+
+        // Balsas e embarcações
+        Route::resource('embarcacoes', VesselController::class)
+            ->only(['index', 'store', 'update', 'destroy'])->parameters(['embarcacoes' => 'vessel']);
+        Route::post('/horarios', [VesselScheduleController::class, 'store'])->name('horarios.store');
+        Route::put('/horarios/{schedule}', [VesselScheduleController::class, 'update'])->name('horarios.update');
+        Route::delete('/horarios/{schedule}', [VesselScheduleController::class, 'destroy'])->name('horarios.destroy');
+        Route::post('/viagens/gerar', [VesselDepartureController::class, 'generate'])->name('viagens.gerar');
+        Route::post('/viagens', [VesselDepartureController::class, 'store'])->name('viagens.store');
+        Route::put('/viagens/{departure}', [VesselDepartureController::class, 'update'])->name('viagens.update');
+        Route::delete('/viagens/{departure}', [VesselDepartureController::class, 'destroy'])->name('viagens.destroy');
 
         Route::get('/cancelamentos', [CancellationController::class, 'index'])->name('cancelamentos');
         Route::post('/cancelamentos/{record}/aprovar', [CancellationController::class, 'approve'])->name('cancelamentos.aprovar');

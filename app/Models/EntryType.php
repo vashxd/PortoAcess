@@ -23,4 +23,16 @@ class EntryType extends Model
     {
         return $this->hasMany(Price::class);
     }
+
+    /** Este tipo de entrada permite escolher uma balsa/embarcação? */
+    public function allowsVessel(): bool
+    {
+        return in_array($this->vessel_selection, ['optional', 'required'], true);
+    }
+
+    /** A escolha da balsa é obrigatória para este tipo? */
+    public function requiresVessel(): bool
+    {
+        return $this->vessel_selection === 'required';
+    }
 }

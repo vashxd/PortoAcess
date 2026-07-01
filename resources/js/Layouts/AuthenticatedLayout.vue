@@ -87,6 +87,10 @@ watch(
                                     </NavLink>
                                 </template>
 
+                                <NavLink :href="route('admin.viagens.index')" :active="route().current('admin.viagens.index')" class="!text-gray-200">
+                                    Viagens
+                                </NavLink>
+
                                 <div v-if="isAdmin" class="flex items-center">
                                     <Dropdown align="left" width="48">
                                         <template #trigger>
@@ -105,6 +109,7 @@ watch(
                                             <DropdownLink :href="route('admin.tipos-entrada.index')">Tipos de entrada</DropdownLink>
                                             <DropdownLink :href="route('admin.precos.index')">Tabela de preços</DropdownLink>
                                             <DropdownLink :href="route('admin.autorizados.index')">Veículos autorizados</DropdownLink>
+                                            <DropdownLink :href="route('admin.embarcacoes.index')">Balsas &amp; embarcações</DropdownLink>
                                             <DropdownLink :href="route('admin.usuarios.index')">Usuários</DropdownLink>
                                             <DropdownLink :href="route('admin.cancelamentos')">Cancelamentos</DropdownLink>
                                         </template>
@@ -170,11 +175,13 @@ watch(
                             <ResponsiveNavLink :href="route('admin.empresas.index')">Empresas</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.faturas.index')">Faturas</ResponsiveNavLink>
                         </template>
+                        <ResponsiveNavLink :href="route('admin.viagens.index')">Viagens</ResponsiveNavLink>
                         <template v-if="isAdmin">
                             <ResponsiveNavLink :href="route('admin.categorias.index')">Categorias</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.tipos-entrada.index')">Tipos de entrada</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.precos.index')">Preços</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.autorizados.index')">Autorizados</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.embarcacoes.index')">Balsas &amp; embarcações</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.usuarios.index')">Usuários</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('admin.cancelamentos')">Cancelamentos</ResponsiveNavLink>
                         </template>

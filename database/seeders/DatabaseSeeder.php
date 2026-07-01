@@ -8,7 +8,11 @@ use App\Models\EntryType;
 use App\Models\Price;
 use App\Models\User;
 use App\Models\VehicleCategory;
+use App\Models\Vessel;
+use App\Models\VesselSchedule;
+use App\Services\VesselService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -75,14 +79,20 @@ class DatabaseSeeder extends Seeder
         $retirada = EntryType::firstOrCreate(['name' => 'Retirada de mercadoria'], [
             'is_paid' => true,
             'charge_moment' => 'saida',
+            'vessel_selection' => 'optional',
             'requires_visitor_info' => false,
         ]);
 
         $balsa = EntryType::firstOrCreate(['name' => 'Embarque na balsa'], [
             'is_paid' => true,
             'charge_moment' => 'entrada',
+            'vessel_selection' => 'required',
             'requires_visitor_info' => false,
         ]);
+
+        // Garante o novo campo em bancos já existentes (idempotente)
+        $retirada->update(['vessel_selection' => 'optional']);
+        $balsa->update(['vessel_selection' => 'required']);
 
         // Tabela de preços ilustrativa (seção 3.3)
         $tabela = [
@@ -120,6 +130,49 @@ class DatabaseSeeder extends Seeder
             'credit_limit' => 10000.00,
             'discount_percent' => 10.00,
         ]);
+
+        // Balsas e embarcações + grade de horários de exemplo
+        $saoJorge = Vessel::firstOrCreate(['name' => 'Balsa São Jorge'], [
+            'type' => 'balsa',
+            'registration' => 'AM-2201',
+            'operator' => 'Navegação Rio Negro',
+            'default_destination' => 'Careiro da Várzea',
+            'capacity_vehicles' => 20,
+            'active' => true,
+        ]);
+
+        $novaEra = Vessel::firstOrCreate(['name' => 'Balsa Nova Era'], [
+            'type' => 'balsa',
+            'registration' => 'AM-3390',
+            'operator' => 'Amazonas Ferry',
+            'default_destination' => 'Manacapuru',
+            'capacity_vehicles' => 15,
+            'active' => true,
+        ]);
+
+        Vessel::firstOrCreate(['name' => 'Lancha Expresso'], [
+            'type' => 'lancha',
+            'operator' => 'Amazonas Ferry',
+            'default_destination' => 'Iranduba',
+            'active' => true,
+        ]);
+
+        // Grade: São Jorge seg-sex 08/12/16h; Nova Era todo dia 10/15h
+        foreach (['08:00', '12:00', '16:00'] as $hora) {
+            VesselSchedule::firstOrCreate(
+                ['vessel_id' => $saoJorge->id, 'departure_time' => $hora],
+                ['days_of_week' => [1, 2, 3, 4, 5], 'destination' => 'Careiro da Várzea', 'active' => true],
+            );
+        }
+        foreach (['10:00', '15:00'] as $hora) {
+            VesselSchedule::firstOrCreate(
+                ['vessel_id' => $novaEra->id, 'departure_time' => $hora],
+                ['days_of_week' => [0, 1, 2, 3, 4, 5, 6], 'destination' => 'Manacapuru', 'active' => true],
+            );
+        }
+
+        // Gera as viagens dos próximos 14 dias a partir da grade
+        app(VesselService::class)->generateDepartures(Carbon::today(), Carbon::today()->addDays(14));
 
         // Massa de demonstração: empresas faturadas + acessos avulsos pagantes.
         $this->call(DemoDataSeeder::class);

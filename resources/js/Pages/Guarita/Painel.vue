@@ -10,6 +10,8 @@ const props = defineProps({
     entryTypes: Array,
     categories: Array,
     companies: Array,
+    vessels: Array,
+    departures: Array,
     priceMatrix: Object,
     pix: Object,
 });
@@ -56,6 +58,8 @@ const entradaForm = useForm({
     vehicle_category_id: null,
     company_id: null,
     camera_event_id: null,
+    vessel_id: null,
+    vessel_departure_id: null,
     visitor_name: '',
     visitor_document: '',
     destination: '',
@@ -148,6 +152,21 @@ const sinespUi = computed(() => {
 const selectedEntryType = computed(() => props.entryTypes.find((t) => t.id === entradaForm.entry_type_id));
 const selectedCompany = computed(() => props.companies.find((c) => c.id === entradaForm.company_id));
 
+/* Balsa / embarcação (conforme o tipo de entrada) */
+const vesselMode = computed(() => selectedEntryType.value?.vessel_selection ?? 'none');
+const showVessel = computed(() => vesselMode.value !== 'none');
+const vesselRequired = computed(() => vesselMode.value === 'required');
+const departuresForVessel = computed(() =>
+    (props.departures || []).filter((d) => d.vessel_id === entradaForm.vessel_id),
+);
+const fmtDeparture = (d) => {
+    const dia = new Date(d.departure_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    return `${dia} ${d.departure_time}${d.destination ? ' → ' + d.destination : ''}`;
+};
+function onVesselChange() {
+    entradaForm.vessel_departure_id = null;
+}
+
 const entradaPrice = computed(() => {
     if (!selectedEntryType.value?.is_paid || !entradaForm.vehicle_category_id) return 0;
     return props.priceMatrix[entradaForm.entry_type_id]?.[entradaForm.vehicle_category_id] ?? 0;
@@ -176,6 +195,10 @@ const companyAuthorizedEntrada = computed(() => {
 
 function submitEntrada() {
     if (!cobrancaNaEntrada.value) entradaForm.payments = [];
+    if (!showVessel.value) {
+        entradaForm.vessel_id = null;
+        entradaForm.vessel_departure_id = null;
+    }
 
     entradaForm
         .transform((data) => ({ ...data, plate: data.plate.toUpperCase().replace(/[^A-Z0-9]/g, '') }))
@@ -510,6 +533,39 @@ function abrirCancela(camera) {
                                 {{ c.name }} ({{ c.discount_percent }}% desc.)
                             </option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Balsa / embarcação de destino -->
+                <div v-if="showVessel" class="grid gap-4 rounded-lg border-2 border-cyan-200 bg-cyan-50 p-4 sm:grid-cols-2">
+                    <div>
+                        <label class="text-sm font-semibold text-cyan-900">
+                            Balsa / embarcação {{ vesselRequired ? '*' : '(opcional)' }}
+                        </label>
+                        <select
+                            v-model="entradaForm.vessel_id"
+                            class="mt-1 w-full rounded-md border-gray-300"
+                            :required="vesselRequired"
+                            @change="onVesselChange"
+                        >
+                            <option :value="null">— selecione —</option>
+                            <option v-for="v in vessels" :key="v.id" :value="v.id">
+                                {{ v.name }}{{ v.default_destination ? ' (' + v.default_destination + ')' : '' }}
+                            </option>
+                        </select>
+                        <p v-if="entradaForm.errors.vessel_id" class="mt-1 text-xs text-red-600">{{ entradaForm.errors.vessel_id }}</p>
+                    </div>
+                    <div v-if="entradaForm.vessel_id">
+                        <label class="text-sm font-semibold text-cyan-900">Viagem / horário</label>
+                        <select v-model="entradaForm.vessel_departure_id" class="mt-1 w-full rounded-md border-gray-300">
+                            <option :value="null">— sem viagem específica —</option>
+                            <option v-for="d in departuresForVessel" :key="d.id" :value="d.id">
+                                {{ fmtDeparture(d) }}
+                            </option>
+                        </select>
+                        <p v-if="!departuresForVessel.length" class="mt-1 text-xs text-cyan-700">
+                            Nenhuma viagem agendada — o vínculo fica só na embarcação.
+                        </p>
                     </div>
                 </div>
 

@@ -23,6 +23,8 @@ class AccessController extends Controller
             'entry_type_id' => ['required', 'exists:entry_types,id'],
             'vehicle_category_id' => ['required', 'exists:vehicle_categories,id'],
             'company_id' => ['nullable', 'exists:companies,id'],
+            'vessel_id' => ['nullable', 'exists:vessels,id'],
+            'vessel_departure_id' => ['nullable', 'exists:vessel_departures,id'],
             'camera_event_id' => ['nullable', 'exists:camera_events,id'],
             'visitor_name' => ['nullable', 'string', 'max:255'],
             'visitor_document' => ['nullable', 'string', 'max:30'],

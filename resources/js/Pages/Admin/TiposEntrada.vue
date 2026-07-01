@@ -13,6 +13,7 @@ const form = useForm({
     name: '',
     is_paid: false,
     charge_moment: 'saida',
+    vessel_selection: 'none',
     max_stay_minutes: null,
     requires_visitor_info: false,
     active: true,
@@ -29,6 +30,7 @@ function editar(t) {
     form.name = t.name;
     form.is_paid = t.is_paid;
     form.charge_moment = t.charge_moment || 'saida';
+    form.vessel_selection = t.vessel_selection || 'none';
     form.max_stay_minutes = t.max_stay_minutes;
     form.requires_visitor_info = t.requires_visitor_info;
     form.active = t.active;
@@ -129,6 +131,15 @@ function inativar(t) {
                     <select v-model="form.charge_moment" class="mt-1 w-full rounded-md border-gray-300">
                         <option value="entrada">Na entrada (obrigatório antes de liberar — ex.: balsa)</option>
                         <option value="saida">Na saída (padrão — ex.: retirada de mercadoria)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-semibold text-gray-600">Escolha de balsa/embarcação</label>
+                    <select v-model="form.vessel_selection" class="mt-1 w-full rounded-md border-gray-300">
+                        <option value="none">Não se aplica</option>
+                        <option value="optional">Opcional (ex.: retirar mercadoria — informar a balsa se souber)</option>
+                        <option value="required">Obrigatória (ex.: atravessar/embarcar na balsa)</option>
                     </select>
                 </div>
 

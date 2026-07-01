@@ -6,25 +6,29 @@ use App\Enums\AccessStatus;
 use App\Enums\CameraEventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessRecord;
+use App\Models\AuditLog;
 use App\Models\CameraEvent;
 use App\Models\Company;
 use App\Models\EntryType;
 use App\Models\Price;
 use App\Models\Vehicle;
 use App\Models\VehicleCategory;
-use App\Services\PriceService;
+use App\Models\Vessel;
+use App\Services\VesselService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class GuaritaController extends Controller
 {
-    public function painel()
+    public function painel(VesselService $vessels)
     {
         return Inertia::render('Guarita/Painel', [
             'entryTypes' => EntryType::where('active', true)->get(),
             'categories' => VehicleCategory::where('active', true)->orderBy('name')->get(),
             'companies' => Company::where('active', true)->orderBy('name')->get(['id', 'name', 'discount_percent']),
+            'vessels' => Vessel::where('active', true)->orderBy('name')->get(['id', 'name', 'default_destination']),
+            'departures' => $vessels->upcomingDepartures(),
             'priceMatrix' => $this->priceMatrix(),
             'pix' => [
                 'key' => config('portoaccess.pix_key'),
@@ -72,7 +76,7 @@ class GuaritaController extends Controller
     {
         $cameraEvent->update(['status' => CameraEventStatus::Descartado]);
 
-        \App\Models\AuditLog::record('camera_event_discarded', $cameraEvent);
+        AuditLog::record('camera_event_discarded', $cameraEvent);
 
         return back()->with('success', 'Leitura descartada.');
     }

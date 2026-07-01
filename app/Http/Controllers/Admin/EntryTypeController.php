@@ -43,6 +43,7 @@ class EntryTypeController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'is_paid' => ['required', 'boolean'],
             'charge_moment' => ['nullable', 'required_if:is_paid,true', 'in:entrada,saida'],
+            'vessel_selection' => ['required', 'in:none,optional,required'],
             'max_stay_minutes' => ['nullable', 'integer', 'min:1'],
             'requires_visitor_info' => ['required', 'boolean'],
         ];

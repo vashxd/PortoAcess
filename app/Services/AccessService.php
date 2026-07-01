@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\AccessStatus;
 use App\Enums\CameraEventStatus;
 use App\Enums\ChargeMoment;
-use App\Enums\PaymentMethod;
 use App\Models\AccessRecord;
 use App\Models\CameraEvent;
 use App\Models\Company;
@@ -24,11 +23,11 @@ class AccessService
     /**
      * Registra a entrada de um veículo (a partir de evento da câmera ou manual).
      *
-     * @param array $data plate, vehicle_category_id, entry_type_id, company_id?,
-     *                    visitor_name?, visitor_document?, destination?,
-     *                    brand?, model?, color?, owner_name?,
-     *                    camera_event_id?, manual_entry?, payments? (tipos pagos na entrada),
-     *                    exemption_reason?
+     * @param  array  $data  plate, vehicle_category_id, entry_type_id, company_id?,
+     *                       visitor_name?, visitor_document?, destination?,
+     *                       brand?, model?, color?, owner_name?,
+     *                       camera_event_id?, manual_entry?, payments? (tipos pagos na entrada),
+     *                       exemption_reason?
      */
     public function registerEntry(array $data, int $operatorId): AccessRecord
     {
@@ -39,6 +38,15 @@ class AccessService
             $event = ! empty($data['camera_event_id']) ? CameraEvent::find($data['camera_event_id']) : null;
 
             $vehicle = Vehicle::firstOrNew(['plate' => $plate]);
+
+            // Escolha de balsa/embarcação conforme o tipo de entrada
+            if ($entryType->requiresVessel() && empty($data['vessel_id'])) {
+                throw ValidationException::withMessages([
+                    'vessel_id' => 'Selecione a balsa/embarcação para este tipo de acesso.',
+                ]);
+            }
+            $vesselId = $entryType->allowsVessel() ? ($data['vessel_id'] ?? null) : null;
+            $vesselDepartureId = $vesselId ? ($data['vessel_departure_id'] ?? null) : null;
 
             // Veículo já no pátio não pode entrar de novo
             $open = AccessRecord::where('vehicle_id', $vehicle->id ?? 0)
@@ -87,6 +95,8 @@ class AccessService
                 'color_model_mismatch' => $mismatch,
                 'operator_in_id' => $operatorId,
                 'company_id' => $company?->id,
+                'vessel_id' => $vesselId,
+                'vessel_departure_id' => $vesselDepartureId,
                 'visitor_name' => $data['visitor_name'] ?? null,
                 'visitor_document' => $data['visitor_document'] ?? null,
                 'destination' => $data['destination'] ?? null,
@@ -118,7 +128,7 @@ class AccessService
     /**
      * Registra a saída de um veículo que está no pátio.
      *
-     * @param array $data payments?, camera_event_id?, billing_justification?, exemption_reason?
+     * @param  array  $data  payments?, camera_event_id?, billing_justification?, exemption_reason?
      */
     public function registerExit(AccessRecord $record, array $data, int $operatorId): AccessRecord
     {

@@ -46,6 +46,16 @@ class AccessRecord extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function vessel()
+    {
+        return $this->belongsTo(Vessel::class);
+    }
+
+    public function vesselDeparture()
+    {
+        return $this->belongsTo(VesselDeparture::class);
+    }
+
     public function operatorIn()
     {
         return $this->belongsTo(User::class, 'operator_in_id');

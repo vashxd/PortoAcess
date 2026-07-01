@@ -11,6 +11,8 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCategory;
+use App\Models\Vessel;
+use App\Models\VesselDeparture;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,6 +22,7 @@ class AccessFlowTest extends TestCase
     use RefreshDatabase;
 
     private User $operador;
+
     private User $admin;
 
     protected function setUp(): void
@@ -37,6 +40,7 @@ class AccessFlowTest extends TestCase
             'balsa' => EntryType::where('name', 'Embarque na balsa')->first()->id,
             'visita' => EntryType::where('name', 'Visita')->first()->id,
             'carro' => VehicleCategory::where('name', 'Carro de passeio')->first()->id,
+            'vessel' => Vessel::where('name', 'Balsa São Jorge')->first()->id,
         ];
     }
 
@@ -126,12 +130,13 @@ class AccessFlowTest extends TestCase
     {
         $ids = $this->ids();
 
-        // Sem pagamento → bloqueado
+        // Sem pagamento → bloqueado (balsa informada)
         $this->actingAs($this->operador)
             ->post('/guarita/entrada', [
                 'plate' => 'CCC3D44',
                 'entry_type_id' => $ids['balsa'],
                 'vehicle_category_id' => $ids['carro'],
+                'vessel_id' => $ids['vessel'],
             ])
             ->assertSessionHasErrors('payments');
 
@@ -141,12 +146,49 @@ class AccessFlowTest extends TestCase
                 'plate' => 'CCC3D44',
                 'entry_type_id' => $ids['balsa'],
                 'vehicle_category_id' => $ids['carro'],
+                'vessel_id' => $ids['vessel'],
                 'payments' => [['method' => 'pix', 'amount' => 60.00]],
             ])
             ->assertSessionHasNoErrors();
 
         $record = AccessRecord::latest('id')->first();
         $this->assertEquals(0.0, $record->balanceDue());
+        $this->assertEquals($ids['vessel'], $record->vessel_id);
+    }
+
+    public function test_embarque_na_balsa_exige_escolher_a_embarcacao(): void
+    {
+        $ids = $this->ids();
+
+        // Sem balsa → bloqueado (tipo com vessel_selection = required)
+        $this->actingAs($this->operador)
+            ->post('/guarita/entrada', [
+                'plate' => 'EEE5F66',
+                'entry_type_id' => $ids['balsa'],
+                'vehicle_category_id' => $ids['carro'],
+                'payments' => [['method' => 'pix', 'amount' => 60.00]],
+            ])
+            ->assertSessionHasErrors('vessel_id');
+    }
+
+    public function test_vinculo_de_veiculo_a_viagem_da_balsa(): void
+    {
+        $ids = $this->ids();
+        $departure = VesselDeparture::where('vessel_id', $ids['vessel'])->orderBy('departure_at')->first();
+
+        $this->actingAs($this->operador)
+            ->post('/guarita/entrada', [
+                'plate' => 'FFF6G77',
+                'entry_type_id' => $ids['balsa'],
+                'vehicle_category_id' => $ids['carro'],
+                'vessel_id' => $ids['vessel'],
+                'vessel_departure_id' => $departure->id,
+                'payments' => [['method' => 'pix', 'amount' => 60.00]],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $record = AccessRecord::latest('id')->first();
+        $this->assertEquals($departure->id, $record->vessel_departure_id);
     }
 
     public function test_faturamento_de_empresa_conveniada_gera_fatura(): void
